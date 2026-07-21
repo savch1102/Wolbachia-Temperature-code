@@ -1,0 +1,69 @@
+## Libraries ----
+
+using CairoMakie
+
+## Seasonal variations ----
+
+t = 0:1:365
+
+Temp1 = @. (1 * sin(2π * (t/365) - 2)) + (5 * sin(4π * (t/365) - 0.5)) + 25
+Temp2 = @. (1 * sin(2π * (t/365) - 0)) + (5 * sin(4π * (t/365) - 0.5)) + 25
+Temp3 = @.  5 * sin(2π * (t/365) - 1) + 25
+
+f = Figure()
+ax = Axis(f[1,1],
+          xlabel = "Time (days)",
+          ylabel = "Temperature (°C)",
+          xticks = 0:50:365,
+          yticks = 20:2.5:30
+)
+
+lines!(ax, t, Temp1, color = :red, label = "Regime A")
+lines!(ax, t, Temp2, color = :blue, label = "Regime B")
+lines!(ax, t, Temp3, color = :green, label = "Regime C")
+
+axislegend(ax, position = :rt, labelsize = 12)
+
+f
+
+## Interannual variations ----
+
+t = 0:1:(365 * 5)
+
+Δ = 0.06 / 10 # °C (grades per decade to grades per year) NOAA
+λ = Δ / 365   # °C (grades per year to grades per day)
+λ = λ * 500
+
+Temp1 = @. (1 * sin(2π * (t/365) - 2)) + 
+           (5 * sin(4π * (t/365) - 0.5)) + (25 + (λ * t))       # Change 1: Base line change
+
+γ = 0.02 / 10 # °C (grades per decade to grades per year of amplitude) Nature
+σ = γ / 365   # °C (grades per year to grades per day)
+σ = σ * 50
+
+Temp2 = @. (1 + (σ * t)) * ((1 * sin(2π * (t/365) - 2)) + 
+                            (5 * sin(4π * (t/365) - 0.5))) + 25 # Change 2: Intensity
+
+ϕ = 1.7 * (2π / 365) # Total displacement in radians 1954-2007 Nature (days)
+ω = ϕ / (53 * 365)   # Daily displacemente in radians per day
+ω = ω * 1000
+
+Temp3 = @. (1 * sin(2π * (t/365) - (2 + (ω * t)))) + 
+           (5 * sin(4π * (t/365) - (0.5 + (ω * t)))) + 25       # Change 3: Phase displacement
+
+f = Figure()
+ax = Axis(f[1,1],
+          title = "Interannual Temperature Regimes",
+          xlabel = "Time (years)",
+          ylabel = "Temperature (°C)",
+          xticks = 0:1:5,
+          #yticks = 20:2.5:30
+)
+
+lines!(ax, t ./ 365, Temp1, color = :indianred, label = "Base line change")
+lines!(ax, t ./ 365, Temp2, color = :steelblue, label = "Intensity change")
+lines!(ax, t ./ 365, Temp3, color = :seagreen, label = "Phase displacement change")
+
+axislegend(ax, position = :lt, labelsize = 10, patchsize = (20, 10))
+
+f
